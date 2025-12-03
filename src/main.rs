@@ -17,4 +17,5 @@ fn main() {
 fn old_days() {
     day1::main();
     day2::main();
+    day3::main();
 }
