@@ -14,7 +14,7 @@ fn main() {
     let buffer = &mut String::new();
     println!("Enter \"y\" to run old days");
     io::stdin().read_line(buffer).expect("TODO: panic message");
-    if buffer == "y" {
+    if buffer == "y\r\n" {
         old_days();
     }
 }
@@ -22,4 +22,5 @@ fn old_days() {
     day1::main();
     day2::main();
     day3::main();
+    day4::main();
 }

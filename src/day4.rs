@@ -1,7 +1,7 @@
 use crate::file_utils::fetch_input;
 
 const DAY: i32 = 4;
-const TEST_ANSWER: usize = 13;
+const TEST_ANSWER: usize = 43;
 
 pub fn main() {
     let test_contents = fetch_input(DAY, true);
@@ -46,21 +46,53 @@ fn solve_day(contents: String) -> usize {
         }
         grid.push(line)
     }
-    for y in 0..height {
-        for x in 0..width {
-            increase_adjacent_paper_count(width, height, &mut grid, y, x);
-        }
-    }
     let mut count: usize = 0;
-    for y in 0..height {
-        for x in 0..width {
-            if is_removable(&mut grid[y][x]) {
-                count += 1
+    let mut removed = 1;
+    while removed > 0 {
+        removed = 0;
+        for y in 0..height {
+            for x in 0..width {
+                increase_adjacent_paper_count(width, height, &mut grid, y, x);
             }
         }
+        for y in 0..height {
+            for x in 0..width {
+                let sq = &mut grid[y][x];
+                if is_removable(sq) {
+                    count += 1;
+                    removed += 1;
+                    sq.is_paper = false
+                }
+            }
+        }
+        print_state(&mut grid);
+        println!("Removing {}", removed);
+        reset_adjacent_count(width, height, &mut grid);
     }
-    print_state(&mut grid);
+    println!("{}", count);
     count
+}
+
+fn reset_adjacent_count(width: usize, height: usize, grid: &mut Vec<Vec<Square>>) {
+    iterate_over_grid(
+        |sq, _y, _x| sq.adjacent_paper_count = 0,
+        width,
+        height,
+        grid,
+    );
+}
+
+fn iterate_over_grid(
+    function: fn(&mut Square, usize, usize),
+    width: usize,
+    height: usize,
+    grid: &mut Vec<Vec<Square>>,
+) {
+    for y in 0..height {
+        for x in 0..width {
+            function(&mut grid[y][x], y, x);
+        }
+    }
 }
 
 fn increase_adjacent_paper_count(
