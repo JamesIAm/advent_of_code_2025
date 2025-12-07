@@ -1,7 +1,5 @@
 use crate::file_utils::fetch_input;
 use std::cmp::{max, min};
-use std::collections::HashSet;
-use std::ops::Index;
 use std::str::Split;
 
 const DAY: i32 = 5;
@@ -16,7 +14,7 @@ pub fn main() {
     println!("{}", real_answer)
 }
 fn solve_day(contents: String) -> usize {
-    let (ids_to_test, valid_id_ranges) = parse_input(contents);
+    let (_ids_to_test, valid_id_ranges) = parse_input(contents);
     let mut reduced_bounds: Vec<(usize, usize)> = Vec::new();
     let mut change_found = true;
     let mut current_bounds = valid_id_ranges.clone();
