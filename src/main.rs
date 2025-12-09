@@ -7,9 +7,10 @@ mod file_utils;
 mod day4;
 mod day5;
 mod day6;
+mod day7;
 
 fn main() {
-    day6::main();
+    day7::main();
     run_old_days();
 }
 
@@ -29,4 +30,5 @@ fn old_days() {
     day4::main();
     day5::main();
     day6::main();
+    day7::main();
 }
