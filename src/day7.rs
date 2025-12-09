@@ -29,10 +29,10 @@ fn solve_day(contents: String) -> usize {
         for x in 0..line.len() {
             update_square(&mut input, y, x);
         }
-        print_state(&input);
     }
+    print_state(&input);
     let mut count = 0;
-    let vec = input[input.len() - 1].iter().for_each(|square| count += square.count);
+    input[input.len() - 1].iter().for_each(|square| count += square.count);
     println!("{}", count);
 
     count
