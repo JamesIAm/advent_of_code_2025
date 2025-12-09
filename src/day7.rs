@@ -1,14 +1,16 @@
-use crate::day7::Square::{Beam, EmptySpace, Manifold, Splitter};
+use crate::day7::SquareType::{Beam, EmptySpace, Manifold, Splitter};
 use crate::file_utils::fetch_input;
+use std::any::Any;
 use std::cmp::PartialEq;
 use std::collections::HashMap;
 use std::fmt;
+use std::fmt::{Display, Formatter};
 use std::mem::replace;
 use std::ops::Index;
 use std::str::Chars;
 
 const DAY: i32 = 7;
-const TEST_ANSWER: usize = 21;
+const TEST_ANSWER: usize = 40;
 
 pub fn main() {
     let test_contents = fetch_input(DAY, true);
@@ -21,40 +23,48 @@ pub fn main() {
 
 fn solve_day(contents: String) -> usize {
     let mut input: Vec<Vec<Square>> = parse_input(contents);
-    let manifold_index = input
-        .get(0)
-        .unwrap()
-        .iter()
-        .position(|x| *x == Manifold)
-        .unwrap();
-    let mut x: HashMap<usize, usize> = HashMap::new();
-    let number_of_columns = input.get(0).unwrap().len();
-    let mut count = 0;
     print_state(&input);
     for y in 1..input.len() {
         let line = input.get(y).unwrap();
         for x in 0..line.len() {
-            update_square(&mut input, y, x, &mut count);
+            update_square(&mut input, y, x);
         }
         print_state(&input);
     }
+    let mut count = 0;
+    let vec = input[input.len() - 1].iter().for_each(|square| count += square.count);
     println!("{}", count);
 
     count
 }
 
-fn update_square(mut input: &mut Vec<Vec<Square>>, y: usize, x: usize, count: &mut usize) {
-    let sq = get_square(&input, y, x);
-    let above = get_square(&input, y - 1, x);
-    if sq == EmptySpace {
-        if above == Manifold || above == Beam {
-            set_square(&mut input, y, x, Beam);
+fn update_square(mut input: &mut Vec<Vec<Square>>, y: usize, x: usize) {
+    let sq = get_square(&input, y, x).unwrap();
+    let above = get_square(&input, y - 1, x).unwrap();
+    let right = get_square(&input, y, x + 1);
+    let right_diag = get_square(&input, y - 1, x + 1);
+    let mut count: usize = 0;
+    if sq.role == EmptySpace {
+        if above.role == Manifold || above.role == Beam {
+            count += above.count;
         }
-    } else if sq == Splitter {
-        if above == Manifold || above == Beam {
-            set_square(&mut input, y, x-1, Beam);
-            set_square(&mut input, y, x+1, Beam);
-            *count += 1
+        if (x > 0) {
+            let left = get_square(&input, y, x - 1);
+            let left_diag = get_square(&input, y - 1, x - 1);
+            if left.is_some() && left.unwrap().role == Splitter && left_diag.unwrap().role == Beam {
+                count += left_diag.unwrap().count;
+            }
+        }
+        if x < input.get(0).unwrap().len() {
+            if right.is_some()
+                && right.unwrap().role == Splitter
+                && right_diag.unwrap().role == Beam
+            {
+                count += right_diag.unwrap().count
+            }
+        }
+        if count > 0 {
+            set_square(&mut input, y, x, Square { role: Beam, count });
         }
     }
 }
@@ -63,8 +73,8 @@ fn set_square(input: &mut Vec<Vec<Square>>, y: usize, x: usize, new_value: Squar
     let _ = replace(input.get_mut(y).unwrap().get_mut(x).unwrap(), new_value);
 }
 
-fn get_square(input: &Vec<Vec<Square>>, y: usize, x: usize) -> &Square {
-    input.get(y).unwrap().get(x).unwrap()
+fn get_square(input: &Vec<Vec<Square>>, y: usize, x: usize) -> Option<&Square> {
+    input.get(y).unwrap().get(x)
 }
 
 fn print_state(input: &Vec<Vec<Square>>) {
@@ -89,9 +99,18 @@ fn parse_input(contents: String) -> Vec<Vec<Square>> {
         .map(|line| {
             line.chars()
                 .map(|char| match char {
-                    '.' => EmptySpace,
-                    'S' => Manifold,
-                    '^' => Splitter,
+                    '.' => Square {
+                        role: EmptySpace,
+                        count: 0,
+                    },
+                    'S' => Square {
+                        role: Manifold,
+                        count: 1,
+                    },
+                    '^' => Square {
+                        role: Splitter,
+                        count: 0,
+                    },
                     _ => panic!("Unknown type {}", char),
                 })
                 .collect::<Vec<Square>>()
@@ -101,20 +120,33 @@ fn parse_input(contents: String) -> Vec<Vec<Square>> {
 }
 
 #[derive(PartialEq, Eq)]
-enum Square {
+struct Square {
+    role: SquareType,
+    count: usize,
+}
+
+#[derive(PartialEq, Eq)]
+enum SquareType {
     Manifold,
     Splitter,
     EmptySpace,
     Beam,
 }
-impl fmt::Display for Square {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
+
+impl Display for SquareType {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
             Manifold => write!(f, "S"),
             Splitter => write!(f, "^"),
             EmptySpace => write!(f, "."),
             Beam => write!(f, "|"),
         }
+    }
+}
+
+impl fmt::Display for Square {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.role)
     }
 }
 impl PartialEq<Square> for &Square {
